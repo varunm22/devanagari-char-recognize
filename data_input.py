@@ -41,6 +41,3 @@ def import_data(start, num, path):
   Y = np.array(Y, dtype = np.dtype('a10')).reshape((len(Y), 1))
 
   return (X, Y)
-
-X, Y = import_train()
-print X.shape, Y.shape
