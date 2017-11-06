@@ -1,0 +1,10 @@
+Using cosine distance (1 - x*y/(|x||y|)):
+Accuracies from k = 1-10:
+[0.78,0.75,0.78,0.78,0.77,0.77,0.77,0.77,0.77,0.77]
+Cosine distance is implemented by normalizing the data points and using Euclidean distance (these are equivalent).
+
+Using Euclidean distance (|x-y|):
+Accuracies from k = 1-10:
+[0.77,0.74,0.77,0.77,0.78,0.78,0.78,0.77,0.78,0.77]
+
+There is a slight dip at k = 2 for both distance metrics.
