@@ -1,0 +1,22 @@
+One vs one:
+  Ran this using SVC class
+  Tried C vals ranging from 0.01 to 100, but nothing really changed
+  Set number of training examples per character to:
+    [10, 20, 50, 100, 200, 500, 1000, 1500]
+  Got validation (200 samples) accuracies of:
+    [0.48, 0.58043478, 0.67391304, 0.71728261, 0.75532609, 0.782934782609, 0.796304347826, 0.796195652174]
+
+One vs rest:
+  Ran this using LinearSVC class
+  Tried C vals ranging from 0.01 to 100, had some differences (below table has vals 0.01, 1, 100]
+  Same numbers of training examples as above
+  Accuracies:
+    [[ 0.4123913   0.4123913   0.41228261]
+     [ 0.45815217  0.45815217  0.45815217]
+     [ 0.47967391  0.4801087   0.48032609]
+     [ 0.4775      0.47695652  0.4773913 ]
+     [ 0.50043478  0.49554348  0.49228261]
+     [ 0.5248913   0.51347826  0.53869565]
+     [ 0.52423913  0.45293478  0.5351087 ]
+     [ 0.53293478  0.48902174  0.50717391]]
+  Overall, much worse than ovo

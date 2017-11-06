@@ -22,22 +22,21 @@ def import_data(start, num, path):
   chars = {}
   dirs = [x[0] for x in os.walk(path)][1:]
   for d in dirs:
-    if d[8] == 'c':
-      c = d.split('_', 1)[1]
+    if d[13] == 'c':
+      c = int(d.split('_')[1]) + 10
     else:
-      c = d.split('/')[2]
+      c = int(d.split('_')[1])
     imgs = os.listdir(d)[start:start+num]
     chars[c] = np.zeros((num, IMG_SIZE))
     for i in range(len(imgs)):
       chars[c][i,] = np.array(Image.open(d + '/' + imgs[i]).convert('L')).ravel()
 
   X = np.zeros((num*len(dirs), IMG_SIZE))
-  Y = []
+  Y = np.zeros(num*len(dirs))
   count = 0
   for char in chars:
     X[count:count+chars[char].shape[0], ] = chars[char]
-    Y += [char]*chars[char].shape[0]
+    Y[count:count+chars[char].shape[0]] = char 
     count += chars[char].shape[0]
-  Y = np.array(Y, dtype = np.dtype('a10')).reshape((len(Y), 1))
 
   return (X, Y)
