@@ -6,6 +6,7 @@ import math
 from keras.optimizers import SGD, Adam
 from keras import models
 from keras import layers
+from keras.callbacks import ModelCheckpoint
 from alexnet_bn import alexnet_bn
 
 def transfer_validation_data():
@@ -43,9 +44,9 @@ def get_generators(batch_size):
      Generators can be customized to include various image augmentation functions
      and to different datasizes.
 
-     Currently generates grayscale images of size 32x32 (as provided in the dataset)
+     Currently generates grayscale images of size 128x128 (as provided in the dataset)
     '''
-    datagen = ImageDataGenerator(
+    train_datagen = ImageDataGenerator(
         rescale=1./255,
         featurewise_center=True,
         featurewise_std_normalization=True,
@@ -61,7 +62,7 @@ def get_generators(batch_size):
 
     train_generator = train_datagen.flow_from_directory(
         'Data/Train',
-        target_size=(32, 32),
+        target_size=(128, 128),
         color_mode='grayscale',
         class_mode='categorical',
         batch_size=batch_size
@@ -69,7 +70,7 @@ def get_generators(batch_size):
 
     validation_generator = validation_datagen.flow_from_directory(
         'Data/Val',
-        target_size=(32, 32),
+        target_size=(128, 128),
         color_mode='grayscale',
         class_mode='categorical',
         batch_size=batch_size
@@ -87,13 +88,17 @@ if __name__ == '__main__':
                   optimizer=optimizer,
                   metrics=['accuracy', 'top_k_categorical_accuracy'])
 
+    checkpointer = ModelCheckpoint(filepath='models/alexnet_1.h5', verbose=1, save_best_only=True)
+
     model.fit_generator(
         train_generator,
         steps_per_epoch=int(math.ceil(float(train_generator.samples) / batch_size)),
         epochs=25,
-        callbacks=[],
+        callbacks=[checkpointer],
         validation_data=validation_generator,
-        validation_steps=int(math.ceil(float(train_generator.samples) / batch_size))
+        validation_steps=int(math.ceil(float(validation_generator.samples) / batch_size))
     )
+
+
 
 
