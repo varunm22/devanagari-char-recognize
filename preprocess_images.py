@@ -6,8 +6,9 @@ import math
 from keras.optimizers import SGD, Adam
 from keras import models
 from keras import layers
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from alexnet_bn import alexnet_bn
+from resnet import ResnetBuilder
 
 def transfer_validation_data():
     '''
@@ -48,11 +49,9 @@ def get_generators(batch_size):
     '''
     train_datagen = ImageDataGenerator(
         rescale=1./255,
-        featurewise_center=True,
-        featurewise_std_normalization=True,
-        rotation_range=20,
         width_shift_range=0.2,
         height_shift_range=0.2,
+        zoom_range=0.2,
         horizontal_flip=True
     )
 
@@ -69,7 +68,7 @@ def get_generators(batch_size):
     )
 
     validation_generator = validation_datagen.flow_from_directory(
-        'Data/Val',
+        'Data/Test',
         target_size=(128, 128),
         color_mode='grayscale',
         class_mode='categorical',
@@ -79,22 +78,39 @@ def get_generators(batch_size):
     return train_generator, validation_generator
 
 if __name__ == '__main__':
-    batch_size = 64
+    batch_size = 128
+    num_outputs = 46
     train_generator, validation_generator = get_generators(batch_size)
-    model = alexnet_bn()
-    optimizer = Adam(lr=1e-4)
+    
+    # Alexnet
+    # model = alexnet_bn()
+
+    # ResNet-18
+    model = ResnetBuilder.build_resnet_34((1,128,128), 46)
+
+    def specific_schedule(epoch_num):
+        lr_rate_list = [0.1 for i in range(15)]
+        lr_rate_list.extend([0.01 for i in range(10)])
+        if epoch_num < len(lr_rate_list):
+            return lr_rate_list[epoch_num]
+        else:
+            return 0.001
+
+    lrate = LearningRateScheduler(specific_schedule)
+    # optimizer = Adam(lr=1e-4)
+    optimizer = SGD(lr=0.1, momentum=0.9, decay=1e-4)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
                   metrics=['accuracy', 'top_k_categorical_accuracy'])
 
-    checkpointer = ModelCheckpoint(filepath='models/alexnet_1.h5', verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath='models/resnet_34_3.h5', verbose=1, save_best_only=True)
 
     model.fit_generator(
         train_generator,
         steps_per_epoch=int(math.ceil(float(train_generator.samples) / batch_size)),
-        epochs=25,
-        callbacks=[checkpointer],
+        epochs=40,
+        callbacks=[checkpointer, lrate],
         validation_data=validation_generator,
         validation_steps=int(math.ceil(float(validation_generator.samples) / batch_size))
     )
