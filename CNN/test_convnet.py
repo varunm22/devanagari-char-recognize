@@ -23,12 +23,9 @@ def get_test_generator(batch_size):
 
 if __name__ == "__main__":
 	batch_size = 32
-	model_1 = load_model('models/resnet_18_2.h5')
-	model_2 = load_model('models/resnet_34_1.h5')
-
-	optimizer = Adam(lr=1e-4)
-
-	models = [model_1, model_2]
+	model_1 = load_model('models/resnet_34_1.h5')
+	# model_2 = load_model('models/resnet_34_3.h5')
+	models = [model_1]
 
 	# scores = model.evaluate_generator(
 	# 	test_generator,
