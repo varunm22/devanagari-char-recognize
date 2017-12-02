@@ -1,9 +1,11 @@
+import matplotlib.pyplot as plt
 import os
 import shutil
 import numpy as np
 import math
 import glob
 import cv2
+import seaborn as sns
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD, Adam
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint
@@ -12,7 +14,6 @@ from keras.models import Model
 from keras import backend as K
 from keras import metrics
 from keras.datasets import mnist
-
 
 def build_decoder(inter_dim=256, input_dim=1024):
     def layer(inputs):
@@ -74,14 +75,20 @@ def build_vae(input_shape):
     # decoder_h = Dense(inter_dim, activation='relu')(z)
     # x_decoded_mean = Dense(input_dim, activation='sigmoid')(decoder_h)
     loss = CustomVariationalLayer()([x, x_decoded_mean])
+    encoder = Model(x, z_mean)
     vae = Model(x, loss)
-    return vae
+    return encoder, vae
 
-def get_images(dir_name):
+def get_images(dir_name, num_classes):
     image_stack = []
-    for img in glob.glob('../Data/%s/*/*.png' % dir_name): # All png images
-        image_stack.append(cv2.imread(img,0))
-    return np.stack(image_stack, axis=0)
+    labels_stack = []
+    class_directories = glob.glob('../Data/%s/*' % dir_name)[:num_classes]
+    for i, class_dir in enumerate(class_directories):
+        for img in glob.glob('%s/*.png' % (class_dir)):
+            image_stack.append(cv2.imread(img,0))
+            labels_stack.append(i)
+
+    return np.stack(image_stack, axis=0), np.array(labels_stack)
 
     
 def get_generators(batch_size):
@@ -120,8 +127,8 @@ def get_generators(batch_size):
     return train_generator, validation_generator
 
 if __name__ == "__main__":
-    x_train = get_images("Train")
-    x_val = get_images("Val")
+    x_train, y_train = get_images("Train", 46)
+    x_val, y_val = get_images("Train", 10)
 
     # Rescale pixel values
     x_train = x_train.astype('float32') / 255.
@@ -133,16 +140,24 @@ if __name__ == "__main__":
 
     batch_size = 100
     img_dim = 32
-    opt = Adam(lr=1e-3)
+    opt = Adam(lr=1e-4)
 
     input_shape = (img_dim, img_dim, 1)
 
-    vae_model = build_vae(input_shape)
+    encoder, vae_model = build_vae(input_shape)
     vae_model.compile(optimizer=opt, loss=None)
 
     vae_model.fit(x_train,
         shuffle=True,
-        epochs=25,
+        epochs=50,
         batch_size=batch_size,
         validation_data=(x_val, None))
+    plt.switch_backend('agg')
+    sns.set_style('darkgrid')
+    # display a 2D plot of the digit classes in the latent space
+    x_val_encoded = encoder.predict(x_val, batch_size=batch_size)
+    plt.figure(figsize=(6, 6))
+    plt.scatter(x_val_encoded[:, 0], x_val_encoded[:, 1], c=y_val)
+    plt.colorbar()
+    plt.savefig('latent_space_10_train.png')
 
