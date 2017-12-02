@@ -60,7 +60,7 @@ def get_generators(batch_size):
     )
 
     train_generator = train_datagen.flow_from_directory(
-        'Data/Train',
+        '../Data/Train',
         target_size=(128, 128),
         color_mode='grayscale',
         class_mode='categorical',
@@ -68,7 +68,7 @@ def get_generators(batch_size):
     )
 
     validation_generator = validation_datagen.flow_from_directory(
-        'Data/Test',
+        '../Data/Test',
         target_size=(128, 128),
         color_mode='grayscale',
         class_mode='categorical',
