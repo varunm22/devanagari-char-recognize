@@ -49,10 +49,10 @@ def get_generators(batch_size):
     '''
     train_datagen = ImageDataGenerator(
         rescale=1./255,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True
+        # width_shift_range=0.2,
+        # height_shift_range=0.2,
+        # zoom_range=0.2,
+        # horizontal_flip=True
     )
 
     validation_datagen = ImageDataGenerator(
@@ -78,15 +78,15 @@ def get_generators(batch_size):
     return train_generator, validation_generator
 
 if __name__ == '__main__':
-    batch_size = 128
+    batch_size = 64
     num_outputs = 46
     train_generator, validation_generator = get_generators(batch_size)
     
     # Alexnet
-    # model = alexnet_bn()
+    model = alexnet_bn()
 
     # ResNet-18
-    model = ResnetBuilder.build_resnet_34((1,128,128), 46)
+    # model = ResnetBuilder.build_resnet_34((1,128,128), 46)
 
     def specific_schedule(epoch_num):
         lr_rate_list = [0.1 for i in range(15)]
@@ -97,20 +97,20 @@ if __name__ == '__main__':
             return 0.001
 
     lrate = LearningRateScheduler(specific_schedule)
-    # optimizer = Adam(lr=1e-4)
-    optimizer = SGD(lr=0.1, momentum=0.9, decay=1e-4)
+    optimizer = Adam(lr=1e-5)
+    # optimizer = SGD(lr=0.1, momentum=0.9, decay=1e-4)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
                   metrics=['accuracy', 'top_k_categorical_accuracy'])
 
-    checkpointer = ModelCheckpoint(filepath='models/resnet_34_3.h5', verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath='models/alexnet_no_aug.h5', verbose=1, save_best_only=True)
 
     model.fit_generator(
         train_generator,
         steps_per_epoch=int(math.ceil(float(train_generator.samples) / batch_size)),
-        epochs=40,
-        callbacks=[checkpointer, lrate],
+        epochs=25,
+        callbacks=[checkpointer],
         validation_data=validation_generator,
         validation_steps=int(math.ceil(float(validation_generator.samples) / batch_size))
     )
