@@ -48,8 +48,8 @@ def build_vae(input_shape):
     x = Input(shape=(input_dim, ))
     h = Dense(inter_dim, activation='relu')(x)
     h = Dense(inter_dim_2, activation='relu')(h)
-    # h = Dense(inter_dim_3, activation='relu')(h)
-    # h = Dense(inter_dim_4, activation='relu')(h)
+    h = Dense(inter_dim_3, activation='relu')(h)
+    h = Dense(inter_dim_4, activation='relu')(h)
 
     z_mean = Dense(latent_dim)(h)
     z_log_var = Dense(latent_dim)(h)
@@ -110,7 +110,7 @@ def get_images(dir_name, num_classes):
 
     image_stack = []
     labels_stack = []
-    class_directories = sorted(glob.glob('../Data/%s/*' % dir_name))[:num_classes]
+    class_directories = [sorted(glob.glob('../Data/%s/*' % dir_name))[3], sorted(glob.glob('../Data/%s/*' % dir_name))[31]]
     print(class_directories)
     for i, class_dir in enumerate(class_directories):
         for img in glob.glob('%s/*.png' % (class_dir)):
@@ -178,18 +178,18 @@ if __name__ == "__main__":
 
     vae_model.fit(x_train,
         shuffle=True,
-        epochs=2000,
+        epochs=1000,
         batch_size=batch_size,
         validation_data=(x_val, None))
 
     plt.switch_backend('agg')
-    sns.set_style('darkgrid')
+    # sns.set_style('darkgrid')
     # display a 2D plot of the digit classes in the latent space
     x_val_encoded = encoder.predict(x_val, batch_size=batch_size)
     plt.figure(figsize=(6, 6))
     plt.scatter(x_val_encoded[:, 0], x_val_encoded[:, 1], c=y_val)
     plt.colorbar()
-    plt.savefig('latent_space_5_val.png')
+    plt.savefig('latent_space_2_val.png')
 
     # display a 2D manifold of the digits
     n = 7 # figure with 15x15 digits
@@ -204,6 +204,7 @@ if __name__ == "__main__":
     for i, yi in enumerate(grid_x):
         for j, xi in enumerate(grid_y):
             z_sample = np.array([[xi, yi]])
+            # z_sample = np.array([other_dims])
             x_decoded = decoder.predict(z_sample)
             digit = x_decoded[0].reshape(digit_size, digit_size)
             figure[i * digit_size: (i + 1) * digit_size,

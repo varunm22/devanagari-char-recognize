@@ -1,11 +1,14 @@
 import tensorflow as tf
 import numpy as np
+import sys
+# sys.path.append("../")
 from data_input import import_train, import_valid, import_test
 import matplotlib.pyplot as plt
+plt.switch_backend("agg")
 from sklearn.utils import resample
 
 
-EPOCHS = 1000
+EPOCHS = 10000
 
 #Adapted from https://github.com/wiseodd/generative-models/blob/master/GAN/conditional_gan/cgan_tensorflow.py
 
@@ -15,6 +18,7 @@ VAL_NUM = 200
 print('importing')
 X_train, Y_train = import_train(TRAIN_NUM)
 X_valid, Y_valid = import_valid(VAL_NUM)
+print(X_train.shape)
 #Scale
 X_train, X_valid = X_train/255, X_valid/255
 #Flatten
@@ -28,9 +32,10 @@ def show(pixels):
     print(np.max(pixels))
     print(np.min(pixels))
     plt.imshow(pixels, cmap='gray')
-    plt.show()
+    plt.savefig("cgan_output.png")
+    # plt.show()
 
-def show_matrix(images):
+def show_matrix(images, number):
     fig, ax = plt.subplots(5, 5)
     for i in range(5):
         for j in range(5):
@@ -41,7 +46,7 @@ def show_matrix(images):
                 print(np.min(pixels))
                 print(np.max(pixels))
     plt.subplots_adjust(wspace = 0, hspace = 0)
-    plt.show()
+    plt.savefig("matrix_%s.png" % number)
 
 Z_dim = 100
 X_dim = 1024
@@ -93,10 +98,10 @@ disc_loss = disc_loss_real+disc_loss_fake
 gen_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_disc, labels=tf.ones_like(gen_disc)))
 
 var_list = [v for v in tf.trainable_variables() if v.name.startswith('Discriminator/')]
-disc_optimizer = tf.train.AdamOptimizer(learning_rate = 0.001).minimize(disc_loss, var_list=var_list)
+disc_optimizer = tf.train.AdamOptimizer(learning_rate = 0.0001).minimize(disc_loss, var_list=var_list)
 
 var_list = [v for v in tf.trainable_variables() if v.name.startswith('Generator/')]
-gen_optimizer = tf.train.AdamOptimizer(learning_rate = 0.001).minimize(gen_loss, var_list=var_list)
+gen_optimizer = tf.train.AdamOptimizer(learning_rate = 0.0001).minimize(gen_loss, var_list=var_list)
 
 
 N = 46*TRAIN_NUM
@@ -113,7 +118,7 @@ with tf.Session() as sess:
             batch_data, batch_labels = shuffled_data[iteration*BATCH_SIZE:(iteration+1)*BATCH_SIZE], shuffled_labels[iteration*BATCH_SIZE:(iteration+1)*BATCH_SIZE]
             label_vals = np.zeros((BATCH_SIZE, 46))
             for i in range(BATCH_SIZE):
-                label_vals[i,int(batch_labels[i])] = 1.0
+                label_vals[i,int(batch_labels[i])-1] = 1.0
             z_val = np.random.uniform(-1, 1, size = (BATCH_SIZE, Z_dim))
             
             _, disc_loss_val = sess.run([disc_optimizer, disc_loss],
@@ -140,7 +145,7 @@ with tf.Session() as sess:
                     gen_image_vals = sess.run(generated_image,
                                             feed_dict={z: z_val, y: label_vals})
                     images[i][j] = gen_image_vals[0,:]
-            show_matrix(images)
+            show_matrix(images, 1)
 
             images = [[0 for i in range(10)] for j in range(10)]
             
@@ -155,14 +160,6 @@ with tf.Session() as sess:
                     gen_image_vals = sess.run(generated_image,
                                             feed_dict={z: z_val, y: label_vals})
                     images[i][j] = gen_image_vals[0,:]
-            show_matrix(images)
+            show_matrix(images, 2)
 
-
-
-
-
-
-
-
-        
         
